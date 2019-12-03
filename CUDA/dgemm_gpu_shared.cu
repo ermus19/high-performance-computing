@@ -37,15 +37,15 @@ __global__ void dgemm_gpu_shared(double* a, double* b, double* c, int n){
     // TODO: Calculate global thread index 
     int idxX = blockIdx.x * BLOCK_SIZE + threadIdx.x;
     int idxY = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-    
+
     // For the matrix multiplication, we need to multiply all the elements of 
     // the idxYth row of a with all the elements of the idXth column of b and 
     // sum up the results.
     double sum = 0;
 
     // TODO: Calculate global offset of upper left corner of thread block.
-    int blockaY = idxX * n;
-    int blockbX = idxY * n;
+    int blockaY = blockIdx.y * BLOCK_SIZE;
+    int blockbX = blockIdx.x * BLOCK_SIZE;
 
     for (int block = 0; block < gridDim.x; ++block){
       // Get the two sub matrices
