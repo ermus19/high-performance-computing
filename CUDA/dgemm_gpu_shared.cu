@@ -31,11 +31,12 @@ __global__ void dgemm_gpu_shared(double* a, double* b, double* c, int n){
     
     // TODO: Allocate shared memory for the two blocks aSub and bSub.
     //       Use two-dimensional matrices of size BLOCK_SIZE * BLOCK_SIZE 
-    ... 
+    __shared__ double aSub[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ double bSub[BLOCK_SIZE][BLOCK_SIZE];
     
     // TODO: Calculate global thread index 
-    int idxX = ... ;
-    int idxY = ... ;
+    int idxX = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+    int idxY = blockIdx.y * BLOCK_SIZE + threadIdx.y;
     
     // For the matrix multiplication, we need to multiply all the elements of 
     // the idxYth row of a with all the elements of the idXth column of b and 
@@ -43,41 +44,41 @@ __global__ void dgemm_gpu_shared(double* a, double* b, double* c, int n){
     double sum = 0;
 
     // TODO: Calculate global offset of upper left corner of thread block.
-    int blockaY = ... ;
-    int blockbX = ... ;
+    int blockaY = idxX * n;
+    int blockbX = idxY * n;
 
     for (int block = 0; block < gridDim.x; ++block){
-        // Get the two sub matrices
-        int blockaX = block * (BLOCK_SIZE);
-        int blockbY = block * (BLOCK_SIZE);
-        if (((blockaY + threadIdx.y) < n) && (blockaX + threadIdx.x) < n) {
-          // TODO: Copy block into shared memory
-	  ...
-        } else {
-            aSub[threadIdx.y][threadIdx.x] = 0;
-        }
+      // Get the two sub matrices
+      int blockaX = block * (BLOCK_SIZE);
+      int blockbY = block * (BLOCK_SIZE);
+      if (((blockaY + threadIdx.y) < n) && (blockaX + threadIdx.x) < n) {
+        // TODO: Copy block into shared memory
+        aSub[threadIdx.y][threadIdx.x] = a[(blockaY + threadIdx.y) * n + blockaX + threadIdx.x];
+      } else {
+        aSub[threadIdx.y][threadIdx.x] = 0;
+      }
 
-        if (((blockbY + threadIdx.y) < n) && (blockbX + threadIdx.x) < n) {
-            bSub[threadIdx.y][threadIdx.x] = b[(blockbY + threadIdx.y) * n + blockbX + threadIdx.x];
-        } else {
-            bSub[threadIdx.y][threadIdx.x] = 0;
-        }
+      if (((blockbY + threadIdx.y) < n) && (blockbX + threadIdx.x) < n) {
+        bSub[threadIdx.y][threadIdx.x] = b[(blockbY + threadIdx.y) * n + blockbX + threadIdx.x];
+      } else {
+        bSub[threadIdx.y][threadIdx.x] = 0;
+      }
 	
-	// TODO: Synchronize threads to make sure all threads are done copying
+	    // TODO: Synchronize threads to make sure all threads are done copying
+      __syncthreads();
     
-    
-        if ((idxX < n) && (idxY < n))
-        {
-            for (int i=0; i < blockDim.x; ++i){ //assumes that we use square blocks
-                sum += aSub[threadIdx.y][i] * bSub[i][threadIdx.x];
-            }
+      if ((idxX < n) && (idxY < n))
+      {
+        for (int i=0; i < blockDim.x; ++i){ //assumes that we use square blocks
+          sum += aSub[threadIdx.y][i] * bSub[i][threadIdx.x];
         }
-
-	// TODO: Synchronize threads to make sure all threads are done with the data
-
+      }
+	    // TODO: Synchronize threads to make sure all threads are done with the data
+      __syncthreads();
     }
+
     if ((idxX < n) && (idxY < n)){    
-        c[idxY * n + idxX] = sum;
+      c[idxY * n + idxX] = sum;
     }
 }
 
@@ -102,11 +103,11 @@ void matrixMulOnDevice(double* a, double* b, double* c, int n)
     
     // TODO
     // Allocate memory for d_a, d_b and d_c on device
-    cudaMalloc(...);
+    cudaMalloc((void **)&d_a, size );
     checkError("cudaMalloc: d_a");
-    ...
+    cudaMalloc((void **)&d_b, size );
     checkError("cudaMalloc: d_b");  
-    ...
+    cudaMalloc((void **)&d_c, size );
     checkError("cudaMalloc: d_c");
     
     
@@ -123,17 +124,17 @@ void matrixMulOnDevice(double* a, double* b, double* c, int n)
     
     // TODO
     // Copy data for a and b from host to device
-    cudaMemcpy(...); 
+    cudaMemcpy(d_a, a, size, cudaMemcpyHostToDevice);
     checkError("copying data of A from host to device");
-    cudaMemcpy(...); 
+    cudaMemcpy(d_b, b, size, cudaMemcpyHostToDevice);
     checkError("copying data of B from host to device");
   
     // TODO: Call the kernel 
-    ...
-
+    dgemm_gpu_shared<<<gridDim, blockDim>>>( d_a, d_b, d_c, n);
+    
     // TODO
     // Read restults from device memory to C 
-    cudaMemcpy(...);
+    cudaMemcpy(c, d_c, size, cudaMemcpyDeviceToHost);
     checkError("cudaMemcpyDeviceToHost");
     
     // Get elapsed time for kernel execution
@@ -193,24 +194,24 @@ int main(int argc, char** argv)
   // Init matrices A and B: A = E so result will be B
 #pragma omp parallel for private(row, col)
   for (row = 0; row < n; ++row){
-      for (col = 0; col < n; col++){
-	a[row * n + col] = (row == col) ? 1.0 : 0.0;
-	b[row * n + col] = row * n + col;
-      }
-    }
+    for (col = 0; col < n; col++){
+	    a[row * n + col] = (row == col) ? 1.0 : 0.0;
+	    b[row * n + col] = row * n + col;
+     }
+  }
 
     // do matrix multiplication on device
     matrixMulOnDevice(a, b, c, n);
      
     // Compare results
-    for ( row = 0; row < n; ++row){
-      for ( col = 0; col < n; ++col) {
+  for ( row = 0; row < n; ++row){
+    for ( col = 0; col < n; ++col) {
 	
-	absError = fabs ( c[row * n + col] - b[row * n + col]);
-	sumAbsError += absError;
+	    absError = fabs ( c[row * n + col] - b[row * n + col]);
+	    sumAbsError += absError;
 	
-	if (absError > maxAbsError)
-	  maxAbsError = absError;
+	    if (absError > maxAbsError)
+	      maxAbsError = absError;
       }
     }
     // Free memory on host
@@ -219,9 +220,11 @@ int main(int argc, char** argv)
     free (c);
   
     printf ("\nmaxAbsError: %4.4f, sumAbsError: %4.4f", maxAbsError, sumAbsError);
-    if (maxAbsError < 2.0e-5)
+    if (maxAbsError < 2.0e-5) {
       printf ("\n\nProgram terminated SUCCESSFULLY.\n\n");
-
+    } else {
+      printf ("\n\nProgram terminated UNSUCCESSFULLY.\n\n");
+    }
     return 0;
 }
 
