@@ -30,11 +30,12 @@ __global__ void dgemm_gpu_shared(double* a, double* b, double* c, int n){
     
     // TODO: Allocate shared memory for the two blocks aSub and bSub.
     //       Use two-dimensional matrices of size BLOCK_SIZE * BLOCK_SIZE 
-    ... 
+    __shared__ double aSub[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ double bSub[BLOCK_SIZE][BLOCK_SIZE];
     
     // TODO: Calculate global thread index 
-    int idxX = ... ;
-    int idxY = ... ;
+    int idxX = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+    int idxY = blockIdx.y * BLOCK_SIZE + threadIdx.y;
     
     // For the matrix multiplication, we need to multiply all the elements of 
     // the idxYth row of a with all the elements of the idXth column of b and 
@@ -42,38 +43,38 @@ __global__ void dgemm_gpu_shared(double* a, double* b, double* c, int n){
     double sum = 0;
 
     // TODO: Calculate global offset of upper left corner of thread block.
-    int blockaY = ... ;
-    int blockbX = ... ;
+    int blockaY = blockIdx.y * BLOCK_SIZE;
+    int blockbX = blockIdx.x * BLOCK_SIZE;
 
     for (int block = 0; block < gridDim.x; ++block){
-        // Get the two sub matrices
-        int blockaX = block * (BLOCK_SIZE);
-        int blockbY = block * (BLOCK_SIZE);
-        if (((blockaY + threadIdx.y) < n) && (blockaX + threadIdx.x) < n) {
-          // TODO: Copy block into shared memory
-	  ...
-        } else {
-            aSub[threadIdx.y][threadIdx.x] = 0;
-        }
+      // Get the two sub matrices
+      int blockaX = block * (BLOCK_SIZE);
+      int blockbY = block * (BLOCK_SIZE);
+      if (((blockaY + threadIdx.y) < n) && (blockaX + threadIdx.x) < n) {
+        // TODO: Copy block into shared memory
+        aSub[threadIdx.y][threadIdx.x] = a[(blockaY + threadIdx.y) * n + blockaX + threadIdx.x];
+      } else {
+        aSub[threadIdx.y][threadIdx.x] = 0;
+      }
 
-        if (((blockbY + threadIdx.y) < n) && (blockbX + threadIdx.x) < n) {
-            bSub[threadIdx.y][threadIdx.x] = b[(blockbY + threadIdx.y) * n + blockbX + threadIdx.x];
-        } else {
-            bSub[threadIdx.y][threadIdx.x] = 0;
-        }
+      if (((blockbY + threadIdx.y) < n) && (blockbX + threadIdx.x) < n) {
+        bSub[threadIdx.y][threadIdx.x] = b[(blockbY + threadIdx.y) * n + blockbX + threadIdx.x];
+      } else {
+        bSub[threadIdx.y][threadIdx.x] = 0;
+      }
 	
-	// TODO: Synchronize threads to make sure all threads are done copying
+      // TODO: Synchronize threads to make sure all threads are done copying
+      __syncthreads();
     
-    
-        if ((idxX < n) && (idxY < n))
-        {
-            for (int i=0; i < blockDim.x; ++i){ //assumes that we use square blocks
-                sum += aSub[threadIdx.y][i] * bSub[i][threadIdx.x];
-            }
+      if ((idxX < n) && (idxY < n))
+      {
+        for (int i=0; i < blockDim.x; ++i){ //assumes that we use square blocks
+          sum += aSub[threadIdx.y][i] * bSub[i][threadIdx.x];
         }
+      }
 
-	// TODO: Synchronize threads to make sure all threads are done with the data
-
+  	  // TODO: Synchronize threads to make sure all threads are done with the data
+      __syncthreads();
     }
     if ((idxX < n) && (idxY < n)){    
         c[idxY * n + idxX] = sum;
@@ -110,7 +111,7 @@ void matrixMulOnDevice(double* a, double* b, double* c, int n)
     
 
     // TODO: Call the kernel 
-    ...
+    dgemm_gpu_shared<<<gridDim, blockDim>>>( a, b, c, n);
     cudaDeviceSynchronize(); 
 
     cudaEventRecord( stop, 0 );
@@ -157,19 +158,19 @@ int main(int argc, char** argv)
     // TODO
     // Allocate memory for matrices (that can be accessed from host and device) 
     size = n * n * sizeof(double);
-    ...
+    cudaMallocManaged((void **)&a, size );
     checkError("cudaMallocManaged: a");
-    ...
+    cudaMallocManaged((void **)&b, size );
     checkError("cudaMallocManaged: b");  
-    ...
+    cudaMallocManaged((void **)&c, size );
     checkError("cudaMallocManaged: c");
     
     // Init matrices A and B: A = E so result will be B
     #pragma omp parallel for private(row, col)
     for (row = 0; row < n; ++row){
       for (col = 0; col < n; col++){
-	a[row * n + col] = (row == col) ? 1.0 : 0.0;
-	b[row * n + col] = row * n + col;
+	      a[row * n + col] = (row == col) ? 1.0 : 0.0;
+	      b[row * n + col] = row * n + col;
       }
     }
 
