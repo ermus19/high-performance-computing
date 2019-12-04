@@ -106,14 +106,17 @@ int main()
     int n_weights = 16;
     const int iter_max = 1000;
     
-    float * a;
-    float * a_new;
-    float * weights;
+    float * a, * d_a;
+    float * a_new, * d_a_new;
+    float * weights, * d_weights;
     // TODO: Replace the calls to cudaMallocManaged: allocate memory on host (malloc) and GPU 
     //       (cudaMalloc). Remember to use different variable names.
-    CUDA_CALL(cudaMallocManaged(&a,     nx*ny*sizeof(float)));
-    CUDA_CALL(cudaMallocManaged(&a_new, nx*ny*sizeof(float)));
-    CUDA_CALL(cudaMallocManaged(&weights, n_weights*sizeof(float)));
+    a = (float*) malloc (nx * ny * sizeof(float));
+    a_new = (float*) malloc (nx * ny * sizeof(float));
+    weights = (float*) malloc (n_weights * sizeof(float));
+    CUDA_CALL(cudaMalloc(&d_a, nx * ny * sizeof(float)));
+    CUDA_CALL(cudaMalloc(&d_a_new, nx * ny * sizeof(float)));
+    CUDA_CALL(cudaMalloc(&d_weights, n_weights * sizeof(float)));
 
     init(a,a_new,nx,ny,weights,n_weights);
     
@@ -128,23 +131,28 @@ int main()
     int iter = 0;
     const float weight = weights[0];
     // TODO: Transfer data from host to device.
+    CUDA_CALL(cudaMemcpy(d_a, a, nx * ny, cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMemcpy(d_a_new, a_new, nx * ny, cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMemcpy(d_weights, weights, n_weights, cudaMemcpyHostToDevice));
+
     while ( iter <= iter_max )
     {
         PUSH_RANGE("jacobi step",1)
         // TODO: Call the kernel with the right pointers.
-        jacobi_iteration<<<dim3(nx/32,ny/4),dim3(32,4)>>>(a_new,a,nx,ny,weight);
+        jacobi_iteration<<<dim3(nx/32,ny/4),dim3(32,4)>>>(d_a_new,d_a,nx,ny,weight);
         CUDA_CALL(cudaGetLastError());
 #ifndef NO_SYNC
         CUDA_CALL(cudaDeviceSynchronize());
 #endif
         POP_RANGE
         // TODO: Check what std::swap does. Can you use it with GPU pointers?
-        std::swap(a,a_new);
+        //std:swap exchanges the given values. Apparently, it can be used with GPU pointers.
+        std::swap(d_a, d_a_new);
         
         PUSH_RANGE("periodic boundary conditions",2)
         //Apply periodic boundary conditions
         // TODO: Call the kernel with the right pointers.
-        apply_periodic_bc<<<dim3(nx/128),dim3(128)>>>(a,nx,ny);
+        apply_periodic_bc<<<dim3(nx/128),dim3(128)>>>(d_a,nx,ny);
         CUDA_CALL(cudaGetLastError());
 #ifndef NO_SYNC
         CUDA_CALL(cudaDeviceSynchronize());
@@ -174,9 +182,12 @@ int main()
     cudaEventDestroy(stop);
     cudaEventDestroy(start);
     // TODO: Use free and cudaFree for the appropriate pointers.
-    cudaFree(weights);
-    cudaFree(a_new);
-    cudaFree(a);
+    cudaFree(d_weights);
+    cudaFree(d_a_new);
+    cudaFree(d_a);
+    free(a);
+    free(a_new);
+    free(weights);
     cudaDeviceReset();
     
     return 0;
