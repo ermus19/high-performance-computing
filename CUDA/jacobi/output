@@ -1,0 +1,99 @@
+
+[master_AP_6@allen jacobi]$ make
+nvcc -DNO_SYNC -DUSE_NVTX -arch=sm_37 jacobi.cu -lnvToolsExt -o jacobi
+./jacobi
+0
+100
+200
+300
+400
+500
+600
+700
+800
+900
+1000
+Runtime 0.0209606 seconds.
+[master_AP_6@allen jacobi]$ make profile
+nvprof --unified-memory-profiling per-process-device ./jacobi
+==16621== NVPROF is profiling process 16621, command: ./jacobi
+0
+100
+200
+300
+400
+500
+600
+700
+800
+900
+1000
+Runtime 0.0222051 seconds.
+==16621== Profiling application: ./jacobi
+==16621== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 89.51%  15.771ms      1001  15.754us  15.168us  17.152us  jacobi_iteration(float*, float const *, int, int, float)
+ 10.23%  1.8015ms      1001  1.7990us  1.7590us  2.4000us  apply_periodic_bc(float*, int, int)
+  0.26%  46.399us         3  15.466us     672ns  23.071us  [CUDA memcpy HtoD]
+
+==16621== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 77.15%  247.25ms         3  82.416ms  127.61us  246.99ms  cudaMalloc
+ 16.75%  53.682ms         1  53.682ms  53.682ms  53.682ms  cudaDeviceReset
+  4.16%  13.332ms      2002  6.6590us  6.2670us  38.120us  cudaLaunch
+  0.69%  2.2003ms        13  169.26us  4.0500us  227.44us  cudaDeviceSynchronize
+  0.62%  1.9731ms      8008     246ns     167ns  415.99us  cudaSetupArgument
+  0.14%  463.40us         3  154.47us  138.88us  183.86us  cudaFree
+  0.14%  451.73us      2002     225ns     187ns  1.1570us  cudaConfigureCall
+  0.13%  417.18us        91  4.5840us     159ns  186.45us  cuDeviceGetAttribute
+  0.13%  400.89us      2002     200ns     186ns  3.2130us  cudaGetLastError
+  0.04%  128.12us         3  42.708us  29.369us  51.493us  cudaMemcpy
+  0.03%  93.766us         1  93.766us  93.766us  93.766us  cuDeviceTotalMem
+  0.01%  45.786us         1  45.786us  45.786us  45.786us  cuDeviceGetName
+  0.00%  14.425us         2  7.2120us  5.5800us  8.8450us  cudaEventRecord
+  0.00%  8.5060us         2  4.2530us     955ns  7.5510us  cudaEventCreate
+  0.00%  7.3400us         1  7.3400us  7.3400us  7.3400us  cudaEventElapsedTime
+  0.00%  6.0410us         2  3.0200us     857ns  5.1840us  cudaEventDestroy
+  0.00%  2.4520us         3     817ns     215ns  1.8550us  cuDeviceGetCount
+  0.00%  1.2860us         3     428ns     197ns     770ns  cuDeviceGet
+
+==16621== NVTX result:
+==16621==   Thread "<unnamed>" (id = 801642304)
+==16621==     Domain "<unnamed>"
+==16621==       Range "jacobi step" (1001 times, total time: 10.028ms)
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  15.771ms      1001  15.754us  15.168us  17.152us  jacobi_iteration(float*, float const *, int, int, float)
+==16621==     API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  6.7212ms      1001  6.7140us  6.2800us  38.120us  cudaLaunch
+==16621==       Range "periodic boundary conditions" (1001 times, total time: 8.8627ms)
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  1.8015ms      1001  1.7990us  1.7590us  2.4000us  apply_periodic_bc(float*, int, int)
+==16621==     API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  6.6103ms      1001  6.6030us  6.2670us  17.116us  cudaLaunch
+==16621==       Range "while loop" (1 times, total time: 22.176ms)
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 89.51%  15.771ms      1001  15.754us  15.168us  17.152us  jacobi_iteration(float*, float const *, int, int, float)
+ 10.23%  1.8015ms      1001  1.7990us  1.7590us  2.4000us  apply_periodic_bc(float*, int, int)
+  0.26%  46.399us         3  15.466us     672ns  23.071us  [CUDA memcpy HtoD]
+==16621==     API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 99.05%  13.332ms      2002  6.6590us  6.2670us  38.120us  cudaLaunch
+  0.95%  128.12us         3  42.708us  29.369us  51.493us  cudaMemcpy
+[master_AP_6@allen jacobi]$ make memcheck
+cuda-memcheck ./jacobi
+========= CUDA-MEMCHECK
+0
+100
+200
+300
+400
+500
+600
+700
+800
+900
+1000
+Runtime 0.657099 seconds.
+========= ERROR SUMMARY: 0 errors
