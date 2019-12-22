@@ -1,0 +1,102 @@
+Maestro envia 10 paquetes de 1000 para un total de 10000
+Proceso maestro enviando paquete 0, vector posicion inicial 0 a proceso 1
+Proceso maestro enviando paquete 1, vector posicion inicial 1000 a proceso 2
+Proceso maestro enviando paquete 2, vector posicion inicial 2000 a proceso 3
+Proceso maestro enviando paquete 3, vector posicion inicial 3000 a proceso 4
+Maestro calcula suma de primos...
+Esclavo 1 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 2 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 3 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 4 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 4 calcula suma de primos 69
+Esclavo 1 calcula suma de primos 77
+Esclavo 3 calcula suma de primos 83
+Esclavo 2 calcula suma de primos 91
+Proceso maestro calcula suma de  primos: 815
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 4 recibe datos de maestro y comprueba si procesar datos o finalizar
+Proceso maestro recibe suma de proceso 4 : 69
+Proceso maestro actualiza suma de esclavos 69
+4 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 4, vector posicion inicial 4000 a esclavo 4
+Proceso maestro no ha recibido todos los paquetes 1 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Proceso maestro recibe suma de proceso 1 : 77
+Proceso maestro actualiza suma de esclavos 146
+5 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 5, vector posicion inicial 5000 a esclavo 1
+Proceso maestro no ha recibido todos los paquetes 2 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Proceso maestro recibe suma de proceso 2 : 91
+Proceso maestro actualiza suma de esclavos 237
+6 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 6, vector posicion inicial 6000 a esclavo 2
+Proceso maestro no ha recibido todos los paquetes 3 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Proceso maestro recibe suma de proceso 3 : 83
+Proceso maestro actualiza suma de esclavos 320
+7 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 7, vector posicion inicial 7000 a esclavo 3
+Proceso maestro no ha recibido todos los paquetes 4 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 2 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 1 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 3 recibe datos de maestro y comprueba si procesar datos o finalizar
+Proceso maestro recibe suma de proceso 2 : 68
+Proceso maestro actualiza suma de esclavos 388
+8 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 8, vector posicion inicial 8000 a esclavo 2
+Proceso maestro no ha recibido todos los paquetes 5 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 2 calcula suma de primos 68
+Esclavo 2 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo 1 calcula suma de primos 91
+Esclavo 3 calcula suma de primos 86
+Proceso maestro recibe suma de proceso 1 : 91
+Proceso maestro actualiza suma de esclavos 479
+9 paquetes enviados de 10 paquetes
+Como hay mas trabajo por procesar, maestro envia mas datos
+Proceso maestro enviando paquete 9, vector posicion inicial 9000 a esclavo 1
+Proceso maestro no ha recibido todos los paquetes 6 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 1 recibe datos de maestro y comprueba si procesar datos o finalizar
+Proceso maestro recibe suma de proceso 3 : 86
+Proceso maestro actualiza suma de esclavos 565
+Proceso maestro no ha recibido todos los paquetes 7 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 4 calcula suma de primos 96
+Proceso maestro recibe suma de proceso 4 : 96
+Proceso maestro actualiza suma de esclavos 661
+Proceso maestro no ha recibido todos los paquetes 8 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 2 calcula suma de primos 71
+Proceso maestro recibe suma de proceso 2 : 71
+Proceso maestro actualiza suma de esclavos 732
+Proceso maestro no ha recibido todos los paquetes 9 de 10
+Maestro intenta recibir datos de cualquier esclavo
+Esclavo 1 calcula suma de primos 83
+Proceso maestro recibe suma de proceso 1 : 83
+Proceso maestro actualiza suma de esclavos 815
+Proceso maestro ya ha recibido todos los paquetes 10 de 10, finalizando...
+Proceso maestro enviando mensajed de finalizacion a proceso 1
+Esclavo 1 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo recibe mensaje de fin
+Proceso maestro enviando mensajed de finalizacion a proceso 2
+Proceso maestro enviando mensajed de finalizacion a proceso 3
+Proceso maestro enviando mensajed de finalizacion a proceso 4
+Proceso maestro ha enviado mensaje de finalizacion a todos los esclavos
+Paquetes enviados: 10
+Paquetes recibidos: 10
+Suma esclavos: 815
+Suma maestro: 815
+Esclavo 2 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo recibe mensaje de fin
+Esclavo 4 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo recibe mensaje de fin
+Esclavo 3 recibe datos de maestro y comprueba si procesar datos o finalizar
+Esclavo recibe mensaje de fin
