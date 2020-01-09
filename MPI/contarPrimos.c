@@ -12,17 +12,26 @@ int esPrimo(int n);
 int main(int argc, char *argv[])
 {
 
+    double t1,t2;
+
     int size, rank, tag1 = 1, tag2 = 2, VA[A], VB[B];
     int sumaMaestro = 0, sumaEsclavo = 0, sumasEsclavos = 0;
-
-    MPI_Request reqs[2];
-    MPI_Status stats[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    MPI_Request reqs[size - 1];
+    MPI_Status stats[size -1];
+
+    for (int i = 0; i < size - 1 ; i++)
+    {
+        reqs[i] = MPI_REQUEST_NULL;
+    }
+
     srand(time(NULL));
+
+    t1= MPI_Wtime();
 
     if (rank == 0)
     {
@@ -41,11 +50,11 @@ int main(int argc, char *argv[])
         //Proceso maestro envía los datos a todos los esclavos disponibles
         for(int i = 1; i < size; i++)
         {
-            MPI_Isend(&VA[pos], B, MPI_INT, i, tag1, MPI_COMM_WORLD, &reqs[0]);
+            MPI_Isend(&VA[pos], B, MPI_INT, i, tag1, MPI_COMM_WORLD, &reqs[i]);
             printf("Proceso maestro enviando paquete %d, vector posicion inicial %d a proceso %d\n", sentPaqs, pos, i);
             pos+=B;
             sentPaqs++;
-        }  
+        }
 
         //Proceso maestro calcula suma total de elementos
         printf("Maestro calcula suma de primos...\n");
@@ -53,7 +62,7 @@ int main(int argc, char *argv[])
         printf("Proceso maestro calcula suma de  primos: %d\n", sumaMaestro);
 
         //Proceso maestro espera a que se envíen los datos
-        MPI_Wait(&reqs[0], &stats[0]);
+        MPI_Waitall(size - 1, reqs, stats);
 
 
         //Proceso maestro recibe calculo de cualquier esclavo mientras haya mensajes que recibir
@@ -77,8 +86,13 @@ int main(int argc, char *argv[])
                 pos+=B;
                 sentPaqs++;
 
-            }
+            } else {
 
+                // Si no hay mas trabajo envio mensaje de fin
+                printf("No hay mas trabajo, envio mensaje de fin a proceso %d\n", source);
+                MPI_Isend(&VA[pos], B, MPI_INT, source, tag2, MPI_COMM_WORLD, &reqs[0]);
+
+            }
 
             if (recvPaqs < paqs){
 
@@ -94,16 +108,21 @@ int main(int argc, char *argv[])
         }
 
         //No hay mas trabajo, maestro envia mensaje de finalizacion por tag 2
-        for(int i = 1; i < size; i++)
-        {
-            MPI_Isend(&VA[pos], B, MPI_INT, i, tag2, MPI_COMM_WORLD, &reqs[0]);
-            printf("Proceso maestro enviando mensajed de finalizacion a proceso %d\n", i);
-        }  
+        //for(int i = 1; i < size; i++)
+        //{
+        //    MPI_Isend(&VA[pos], B, MPI_INT, i, tag2, MPI_COMM_WORLD, &reqs[0]);
+        //    printf("Proceso maestro enviando mensajed de finalizacion a proceso %d\n", i);
+        //}
+
+        t2 =  MPI_Wtime();
+
         printf("Proceso maestro ha enviado mensaje de finalizacion a todos los esclavos\n");
         printf("Paquetes enviados: %d\n", sentPaqs);
         printf("Paquetes recibidos: %d\n", recvPaqs);
         printf("Suma esclavos: %d\n", sumasEsclavos);
         printf("Suma maestro: %d\n", sumaMaestro);
+
+        printf("MPI_Wtime measured is %1.2f\n", t2 - t1);
 
     } else {
 
@@ -121,7 +140,7 @@ int main(int argc, char *argv[])
             //Proceso esclavo se prepara para recibir datos
             MPI_Recv(&VB[0], B, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stats[1]);
             printf("Esclavo %d recibe datos de maestro y comprueba si procesar datos o finalizar\n", rank);
-            
+
             if(stats[1].MPI_TAG == 1){
                 suma = calculaSumaPrimos(VB, B);
                 printf("Esclavo %d calcula suma de primos %d\n", rank, suma);
@@ -133,7 +152,7 @@ int main(int argc, char *argv[])
             }
 
         }
-        
+
     }
 
     MPI_Finalize();
@@ -155,7 +174,7 @@ int calculaSumaPrimos(int V[], int n)
 }
 
 //Funcion que comprueba si la entrada es un numero primo
-int esPrimo(int n) 
+int esPrimo(int n)
 {
 
     if (n < 2) {
@@ -169,5 +188,5 @@ int esPrimo(int n)
         }
     }
     //No se han encontrado divisores
-    return 1; 
+    return 1;
 }
