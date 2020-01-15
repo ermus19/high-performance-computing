@@ -20,13 +20,14 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    //int mR[N][N], mG[N][N], mB[N][N];
     int mRGB[N][N][3];
 
     MPI_Comm cart;
     int dim[3], period[3], reorder, procs_dim;
     int coord[3], id;
     double t0, total;
+
+    MPI_Status status;
 
     srand(time(NULL));
 
@@ -46,9 +47,6 @@ int main(int argc, char *argv[])
         {
             for (int j = 0; j < N; j++)
             {
-                //mR[i][j] = rand() % 255;
-                //mG[i][j] = rand() % 255;
-                //mB[i][j] = rand() % 255;
                 for (int k = 0; k < 3; k++){
                     mRGB[i][j][k] = rand() % 255;
                 }
@@ -122,6 +120,31 @@ int main(int argc, char *argv[])
 
         MPI_Type_free(&cuadrante);
 
+        int maxRGB[4][4][3];
+        int recV = 0;
+
+        while(1)
+        {
+            int maxSlave = 0;
+            int slaveCoords[3];
+
+            printf("Maestro ha recibido %d maximos\n", recV);
+
+            MPI_Recv(&maxSlave, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+
+            MPI_Cart_coords(cart, status.MPI_SOURCE, 3, slaveCoords);
+
+            printf("Maestro recibe maximo %d de proceso %d en coordenadas %d %d %d\n", maxSlave, status.MPI_SOURCE,  slaveCoords[0], slaveCoords[1], slaveCoords[2]);
+            recV++;
+
+            if(recV == 11)
+            {
+                break;
+            }
+
+        }
+
+
     //Esclavo 
     } else {
 
@@ -130,12 +153,14 @@ int main(int argc, char *argv[])
         //Procesos diferentes al maetro reciben los bloques en vector y calculan maximo de su cuadrante
         MPI_Recv(&V, 2 * N, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         max = calcularMaximo(V, 2 * N);
-        printf("Proceso: %d, maximo %d\n", rank, max);
-        for(int i = 0; i < 2 * N; i++)
-        {
-            printf("%d ", V[i]);
-        }
-        printf("\n");
+        //for(int i = 0; i < 2 * N; i++)
+        //{
+        //    printf("%d ", V[i]);
+        //}
+        //printf("\n");
+
+        printf("Proceso: %d, maximo %d lo envia a maestro...\n", rank, max);
+        MPI_Send(&max, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
     }
 
