@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     MPI_Comm cart;
     int dim[3], period[3], reorder, procs_dim;
     int coord[3], id;
-    double t0, total;
+    double t1,t2;
 
     MPI_Status status;
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     //Se toma tiempo inicial
-    t0 = MPI_Wtime();
+    t1 = MPI_Wtime();
 
     //Maestro reparte cuadrantes de matriz a la topologia y calcula su cuadrante
     if (rank == 0)
@@ -171,8 +171,11 @@ int main(int argc, char *argv[])
             maxGlobal[k] = max;
 
         }
+        t2 =  MPI_Wtime();
+
 
         printf("Maestro calcula maximo R: %d G: %d B: %d\n", maxGlobal[0], maxGlobal[1], maxGlobal[2]);
+        printf("MPI_Wtime measured is %1.2f seconds\n", t2 - t1);
 
     //Esclavo 
     } else {
