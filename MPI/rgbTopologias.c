@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N 8
+#define N 1600
 
 int calcularMaximo(int A[], int tam);
 
@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
             for (int j = 0; j < N; j++)
             {
                 for (int k = 0; k < 3; k++){
+
                     mRGB[i][j][k] = rand() % 255;
+                    
                 }
             }
         }
@@ -96,7 +98,7 @@ int main(int argc, char *argv[])
                     } else {
 
                         
-                        int V[2 * N], maxMaestro;
+                        int V[N/2 * N/2], maxMaestro;
                         int p = 0;
 
                         for (int z = 0; z < N/2; z++)
@@ -109,7 +111,7 @@ int main(int argc, char *argv[])
 
                         }
 
-                        maxMaestro = calcularMaximo(V, 2 * N);
+                        maxMaestro = calcularMaximo(V, N/2 * N/2);
                         printf("Soy maestro y calculo mi maximo %d\n", maxMaestro);
                         maxRGB[coord[0]][coord[1]][coord[2]] = maxMaestro;
 
@@ -122,7 +124,6 @@ int main(int argc, char *argv[])
 
         MPI_Type_free(&cuadrante);
 
-        
         int recV = 0;
 
         while(1)
@@ -176,11 +177,11 @@ int main(int argc, char *argv[])
     //Esclavo 
     } else {
 
-        int V[2 * N], max;
+        int V[N/2 * N/2], max;
 
         //Procesos diferentes al maetro reciben los bloques en vector y calculan maximo de su cuadrante
-        MPI_Recv(&V, 2 * N, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        max = calcularMaximo(V, 2 * N);
+        MPI_Recv(&V, N/2 * N/2, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        max = calcularMaximo(V, N/2 * N/2);
         //for(int i = 0; i < 2 * N; i++)
         //{
         //    printf("%d ", V[i]);
