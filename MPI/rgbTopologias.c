@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     }
 
     int mRGB[N][N][3];
+    int maxRGB[2][2][3];
 
     MPI_Comm cart;
     int dim[3], period[3], reorder, procs_dim;
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
                     if(cart_rank != 0)
                     {
 
-                        printf("Maestro envia cuadrante %d %d %d de matriz RGB a proceso en coordenadas %d %d %d\n", coord[0] * N/2, coord[1] * N/2, coord[2], coord[0], coord[1], coord[2]);
+                        printf("Maestro envia cuadrante %d %d %d de matriz RGB a proceso %d en coordenadas %d %d %d\n", coord[0] * N/2, coord[1] * N/2, coord[2], cart_rank, coord[0], coord[1], coord[2]);
                         MPI_Send(&mRGB[coord[0] * N/2][coord[1] * N/2][coord[2]], 1, cuadrante, cart_rank, 0, MPI_COMM_WORLD);
 
                     } else {
@@ -110,6 +111,7 @@ int main(int argc, char *argv[])
 
                         maxMaestro = calcularMaximo(V, 2 * N);
                         printf("Soy maestro y calculo mi maximo %d\n", maxMaestro);
+                        maxRGB[coord[0]][coord[1]][coord[2]] = maxMaestro;
 
                     }
 
@@ -120,7 +122,7 @@ int main(int argc, char *argv[])
 
         MPI_Type_free(&cuadrante);
 
-        int maxRGB[4][4][3];
+        
         int recV = 0;
 
         while(1)
@@ -135,15 +137,41 @@ int main(int argc, char *argv[])
             MPI_Cart_coords(cart, status.MPI_SOURCE, 3, slaveCoords);
 
             printf("Maestro recibe maximo %d de proceso %d en coordenadas %d %d %d\n", maxSlave, status.MPI_SOURCE,  slaveCoords[0], slaveCoords[1], slaveCoords[2]);
+            
+            maxRGB[slaveCoords[0]][slaveCoords[1]][slaveCoords[2]] = maxSlave;
+            
             recV++;
 
-            if(recV == 11)
+            if(recV == size - 1)
             {
                 break;
             }
 
         }
 
+        int max = 0;
+        int maxGlobal[3];
+
+        for(int k = 0; k < 3; k++)
+        {
+            int max = maxRGB[0][0][k];
+
+            for(int j = 0; j < 2; j++)
+            {
+                for (int i = 0; i< 2; i++)
+                {
+                   
+                    if (maxRGB[i][j][k] > max) {
+                        max = maxRGB[i][j][k];
+                    }
+                }
+            }
+
+            maxGlobal[k] = max;
+
+        }
+
+        printf("Maestro calcula maximo R: %d G: %d B: %d\n", maxGlobal[0], maxGlobal[1], maxGlobal[2]);
 
     //Esclavo 
     } else {
