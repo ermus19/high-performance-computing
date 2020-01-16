@@ -2,8 +2,7 @@
 #include <time.h>
 #include <stdio.h>
 
-//#define A 1000000
-#define A 10000
+#define A 1000000
 #define B 1000
 
 int calculaSumaPrimos(int V[], int n);
@@ -31,7 +30,7 @@ int main(int argc, char *argv[])
 
     srand(time(NULL));
 
-    t1= MPI_Wtime();
+    t1 = MPI_Wtime();
 
     if (rank == 0)
     {
@@ -122,7 +121,7 @@ int main(int argc, char *argv[])
         printf("Suma esclavos: %d\n", sumasEsclavos);
         printf("Suma maestro: %d\n", sumaMaestro);
 
-        printf("MPI_Wtime measured is %1.2f\n", t2 - t1);
+        printf("MPI_Wtime measured is %1.2f seconds\n", t2 - t1);
 
     } else {
 
